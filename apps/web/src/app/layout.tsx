@@ -21,6 +21,9 @@ const body = Libre_Baskerville({
 export const metadata: Metadata = {
   title: "Sandhya Foods",
   description: "RajasthaniPapad Store",
+  icons: {
+    icon: "/favicon.ico",
+  },
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
