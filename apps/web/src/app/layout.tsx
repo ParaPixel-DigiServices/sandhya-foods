@@ -19,8 +19,8 @@ const body = Libre_Baskerville({
 })
 
 export const metadata: Metadata = {
-  title: "Sandhya Papad",
-  description: "Royal Indian Papad Store",
+  title: "Sandhya Foods",
+  description: "RajasthaniPapad Store",
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
