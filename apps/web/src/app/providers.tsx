@@ -1,4 +1,5 @@
 "use client";
+export const dynamic = 'force-static'
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactNode } from "react";
 

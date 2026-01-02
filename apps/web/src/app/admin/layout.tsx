@@ -1,5 +1,6 @@
-export const dynamic = 'force-static'
 "use client"
+export const dynamic = 'force-static'
+
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useState } from "react"

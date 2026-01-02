@@ -1,5 +1,5 @@
 "use client"
-
+export const dynamic = 'force-static'
 import { usePathname } from "next/navigation"
 import RoyalNavbar from "@/components/layout/Navbar"
 import RoyalCartOrb from "@/components/cart/RoyalCartOrb"

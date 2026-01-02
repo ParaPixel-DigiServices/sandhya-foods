@@ -1,5 +1,6 @@
-export const dynamic = 'force-static'
 "use client";
+export const dynamic = 'force-static'
+
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 
