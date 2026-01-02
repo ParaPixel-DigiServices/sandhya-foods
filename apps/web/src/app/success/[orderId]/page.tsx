@@ -1,3 +1,4 @@
+export const dynamic = 'force-static'
 export default function SuccessPage() {
   return (
     <section className="min-h-screen flex items-center justify-center text-center px-6">

@@ -1,3 +1,4 @@
+export const dynamic = 'force-static'
 import BestsellerGallery from "@/components/bestseller/BestsellerGallery"
 import RoyalCartOrb from "@/components/cart/RoyalCartOrb"
 import HeritageStrip from "@/components/heritage/HeritageStrip"
