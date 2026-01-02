@@ -1,45 +1,39 @@
-"use client";
-import { useQuery, useMutation } from "@tanstack/react-query";
-import { supabase } from "@/lib/supabase";
-import { useState } from "react";
+"use client"
+import { useCart } from "@/store/cart"
+import { useEffect, useState } from "react"
+import { supabase } from "@/lib/supabase"
+import { useRouter } from "next/navigation"
+import RoyalCheckoutForm from "@/components/checkout/RoyalCheckoutForm"
+import RoyalCheckoutSummary from "@/components/checkout/RoyalCheckoutSummary"
+import RoyalCheckoutBackdrop from "@/components/checkout/RoyalCheckoutBackdrop"
 
-export default function Checkout() {
-  const [address,setAddress]=useState<string>();
+export default function CheckoutPage() {
+  const items = useCart(s=>s.items)
+  const router = useRouter()
+  const [ready,setReady] = useState(false)
 
-  const { data:addresses } = useQuery({
-    queryKey:["addresses"],
-    queryFn: async()=> (await supabase.from("addresses").select("*")).data
-  });
+  useEffect(()=>{
+    supabase.auth.getUser().then(({data})=>{
+      if(!data.user) router.replace("/auth")
+      else setReady(true)
+    })
+  },[])
 
-  const { data:cart } = useQuery({
-    queryKey:["cart"],
-    queryFn: async()=> (await supabase.from("cart_items").select("*,products(price)")).data
-  });
+  if(!ready) return null
 
-  const place = useMutation({
-    mutationFn: async()=>{
-      const total = cart?.reduce((s,i)=>s+i.qty*i.products.price,0) || 0;
-      const addr = addresses?.find(a=>a.id===address);
-      const { data:order } = await supabase.from("orders").insert({
-        address_snapshot: addr,
-        total_amount: total,
-        payment_status: "pending",
-        order_status: "placed",
-        payment_method: "razorpay"
-      }).select().single();
-
-      await supabase.from("payments").insert({ order_id: order.id, amount: total, status:"pending", method:"razorpay" });
-    }
-  });
+  if(items.length===0){
+    return <div className="min-h-screen flex items-center justify-center">Your cart is empty</div>
+  }
 
   return (
-    <div className="p-4 max-w-md mx-auto">
-      <select className="w-full border p-3 mb-4" onChange={e=>setAddress(e.target.value)}>
-        <option>Select Address</option>
-        {addresses?.map(a=><option key={a.id} value={a.id}>{a.address_line1}</option>)}
-      </select>
-
-      <button onClick={()=>place.mutate()} className="w-full p-3 bg-black text-white">Place Order</button>
-    </div>
-  );
+    <section className="relative overflow-hidden">
+      <RoyalCheckoutBackdrop />
+      <div className="relative max-w-[92rem] mx-auto px-4 sm:px-6 lg:px-12 pt-24 sm:pt-32 lg:pt-36 pb-32 sm:pb-40">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-20">
+          <div className="lg:col-span-7"><RoyalCheckoutForm/></div>
+          <div className="lg:col-span-5"><RoyalCheckoutSummary/></div>
+        </div>
+      </div>
+    </section>
+  )
 }

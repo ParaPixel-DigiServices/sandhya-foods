@@ -43,7 +43,7 @@ export default function HeroFrame() {
           lg:drop-shadow-[0_5px_0_rgba(212,175,55,0.65)]
           mb-8 sm:mb-10 lg:mb-14
         ">
-          Sandhya<br/>Papad
+          Sandhya<br/>Foods
         </h1>
 
         <h2 className="
@@ -51,7 +51,7 @@ export default function HeroFrame() {
           text-[1.1rem] sm:text-[1.6rem] md:text-[2.2rem]
           mb-6 sm:mb-8 lg:mb-10
         ">
-          Royal Kitchens of Jodhpur
+          Kitchens of Jodhpur
         </h2>
 
         <p className="
@@ -60,15 +60,15 @@ export default function HeroFrame() {
           leading-relaxed
           mb-10 sm:mb-12 lg:mb-16
         ">
-          Crafted using ancestral Rajasthani culinary techniques, sun-dried in palace courtyards and packed fresh to preserve purity, tradition and royal taste.
+          Crafted using ancestral Rajasthani culinary techniques, sun-dried in palace courtyards and packed fresh to preserve purity, tradition and taste.
         </p>
 
         <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center lg:justify-start">
           <a
             href="/shop"
-            className="px-10 sm:px-14 lg:px-16 py-4 sm:py-5 border-2 border-[gold] uppercase tracking-[0.35em] text-xs sm:text-sm hover:bg-[#7A1A14] hover:text-white transition"
+            className="px-10 sm:px-14 lg:px-16 py-4 sm:py-5 border-2 border-[#7A1A14] uppercase tracking-[0.35em] text-xs sm:text-sm hover:bg-[gold] hover:text-[#7A1A14] transition"
           >
-            Enter Royal Bazaar
+            Enter Shop
           </a>
           <a
             href="/about"

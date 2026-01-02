@@ -20,7 +20,7 @@ export default function BestsellerGallery() {
   return (
     <section className="max-w-7xl mx-auto px-6 pb-32">
       <div className="flex justify-between items-end mb-10">
-        <h2 className="font-royal text-3xl text-royal">Royal Bestsellers</h2>
+        <h2 className="font-royal text-3xl text-royal">Bestsellers</h2>
         <a href="/shop" className="text-gold text-sm">
           View All
         </a>

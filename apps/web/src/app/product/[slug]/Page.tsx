@@ -1,30 +1,50 @@
-"use client";
-import { useQuery, useMutation } from "@tanstack/react-query";
-import { supabase } from "@/lib/supabase";
+"use client"
 
-export default function Product({ params }:{params:{slug:string}}) {
-  const { data } = useQuery({
-    queryKey:["product",params.slug],
-    queryFn: async()=>{
-      const { data } = await supabase.from("products").select("*,product_images(url)").eq("slug",params.slug).single();
-      return data;
-    }
-  });
+import { use } from "react"
+import { useQuery } from "@tanstack/react-query"
+import { supabase } from "@/lib/supabase"
+import RoyalProductShrine from "@/components/product/RoyalProductShrine"
+import RoyalProductInfo from "@/components/product/RoyalProductInfo"
+import RoyalProductBackdrop from "@/components/product/RoyalProductBackdrop"
 
-  const add = useMutation({
-    mutationFn: async()=>{
-      await supabase.from("cart_items").insert({ product_id:data.id, qty:1 });
-    }
-  });
+export default function ProductPage({ params }:{ params: Promise<{ slug:string }> }) {
 
-  if(!data) return null;
+  const { slug } = use(params)
+
+  const { data: product } = useQuery({
+    queryKey: ["product", slug],
+    queryFn: async () => (
+      await supabase
+        .from("products")
+        .select("*,product_images(url,is_primary)")
+        .eq("slug", slug)
+        .single()
+    ).data
+  })
+
+  if (!product) return null
 
   return (
-    <div className="p-4">
-      <img src={data.product_images[0]?.url}/>
-      <h1>{data.name}</h1>
-      <p>{data.description}</p>
-      <button onClick={()=>add.mutate()} className="bg-black text-white p-3 mt-4">Add to Cart</button>
-    </div>
-  );
+    <section className="relative overflow-hidden">
+      <RoyalProductBackdrop />
+
+      <div className="
+        relative max-w-[92rem] mx-auto
+        px-4 sm:px-6 lg:px-12
+        pt-24 sm:pt-32 lg:pt-36
+        pb-32 sm:pb-40
+      ">
+
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-20 items-start">
+          <div className="lg:col-span-6">
+            <RoyalProductShrine product={product} />
+          </div>
+          <div className="lg:col-span-6">
+            <RoyalProductInfo product={product} />
+          </div>
+        </div>
+
+      </div>
+    </section>
+  )
 }
