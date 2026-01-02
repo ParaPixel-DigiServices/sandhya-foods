@@ -58,8 +58,8 @@ export default function RoyalExhibitionHall() {
             "
           >
             <option value="new">Newest First</option>
-            <option value="low">Low → High</option>
-            <option value="high">High → Low</option>
+            <option value="low">Price : Low → High</option>
+            <option value="high">Price : High → Low</option>
           </select>
 
         </div>
