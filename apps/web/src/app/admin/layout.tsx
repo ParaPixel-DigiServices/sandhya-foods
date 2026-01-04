@@ -38,7 +38,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       `}>
         <div className="p-6 border-b border-white/10 flex items-center justify-between">
           <span className="tracking-[0.35em] uppercase text-[#d4af37]">Admin</span>
-          <button onClick={() => setOpen(false)} className="lg:hidden text-[#7a1a14] text-xl">✕</button>
+          <button onClick={() => setOpen(false)} className="lg:hidden text-[#d4af37] text-xl">✕</button>
         </div>
         <nav className="p-4 space-y-2">
           {links.map(l => (
@@ -46,7 +46,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               key={l.href}
               href={l.href}
               onClick={() => setOpen(false)}
-              className={`block px-5 py-3 rounded-xl transition
+              className={`block px-5 py-3 rounded-xl transition text-[#d4af37]
                 ${path === l.href ? "bg-[#7a1a14]" : "hover:bg-white/10"}
               `}
             >
