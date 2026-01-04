@@ -22,7 +22,17 @@
   .border-sandstone { border-color:var(--sandstone); }
 }
 
-body { background:var(--parchment); color:var(--ink); }
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body { 
+  background:var(--parchment); 
+  color:var(--ink);
+}
+
 h1,h2,h3 { font-family: var(--font-royal); }
 
 p,span,li,a,button,input,textarea {
@@ -30,30 +40,23 @@ p,span,li,a,button,input,textarea {
 }
 
 /* ===== ROYAL BUTTON SYSTEM ===== */
-
 .royal-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-
   padding: 14px 42px;
   border-radius: 999px;
-
   background: radial-gradient(circle at top, #FFE39B, #D4AF37);
   color: #5C3A00;
-
   text-transform: uppercase;
   letter-spacing: 0.35em;
   font-size: 11px;
   font-weight: 600;
   text-decoration: none;
-
   border: 2px solid #D4AF37;
-
   box-shadow:
     0 10px 25px rgba(0,0,0,.35),
     inset 0 1px 0 rgba(255,255,255,.4);
-
   transition: all .25s ease;
   cursor: pointer;
 }
@@ -76,8 +79,12 @@ p,span,li,a,button,input,textarea {
   background: linear-gradient(#8C241E, #6A140E);
 }
 
-.royal-hall{position:relative}
-.royal-hall:before{
+.royal-hall {
+  position: relative;
+  width: 100%;
+}
+
+.royal-hall:before {
   content:"";
   position:absolute;
   inset:-300px;
@@ -88,7 +95,7 @@ p,span,li,a,button,input,textarea {
   pointer-events:none;
 }
 
-.royal-stat{
+.royal-stat {
   position:relative;
   background:#fff;
   border-radius:36px;
@@ -97,26 +104,29 @@ p,span,li,a,button,input,textarea {
   box-shadow:0 40px 140px rgba(0,0,0,.35);
   overflow:hidden;
 }
-.royal-stat-label{
+
+.royal-stat-label {
   font-size:11px;
   letter-spacing:.45em;
   text-transform:uppercase;
   color:#7A1A14;
 }
-.royal-stat-value{
+
+.royal-stat-value {
   margin-top:10px;
   font-size:36px;
   font-weight:800;
   color:#7A1A14;
 }
-.royal-stat-glow{
+
+.royal-stat-glow {
   position:absolute;
   inset:-50px;
   background:radial-gradient(circle,#D4AF37 0%,transparent 60%);
   opacity:.16;
 }
 
-.palace-panel{
+.palace-panel {
   background:#fff;
   border-radius:40px;
   padding:30px;
@@ -124,25 +134,27 @@ p,span,li,a,button,input,textarea {
   box-shadow:0 60px 180px rgba(0,0,0,.45);
   position:relative;
   overflow:hidden;
+  width: 100%;
+  min-width: 0;
 }
-.palace-panel:before{
+
+.palace-panel:before {
   content:"";
   position:absolute;
   inset:-60px;
   background:radial-gradient(circle,#D4AF37 0%,transparent 70%);
   opacity:.14;
 }
-.palace-panel-title{
+
+.palace-panel-title {
   text-transform:uppercase;
   letter-spacing:.5em;
   font-size:11px;
   color:#7A1A14;
   margin-bottom:18px;
 }
-.palace-panel:hover{transform:translateY(-4px) scale(1.01);transition:.35s ease;}
 
-
-
-
-
-
+.palace-panel:hover {
+  transform:translateY(-4px) scale(1.01);
+  transition:.35s ease;
+}

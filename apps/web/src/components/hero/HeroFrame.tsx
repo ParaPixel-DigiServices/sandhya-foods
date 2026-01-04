@@ -15,7 +15,7 @@ export default function HeroFrame() {
       <div className="order-1 lg:order-none lg:col-span-5 flex justify-center relative">
         <div className="absolute inset-0 bg-[radial-gradient(circle,rgba(212,175,55,0.35),transparent_70%)] rounded-full blur-3xl" />
         <img
-          src="/hero-pack.png"
+          src="/sandhyalogo.png"
           className="
             relative
             w-[240px] sm:w-[300px] md:w-[360px] xl:w-[480px]

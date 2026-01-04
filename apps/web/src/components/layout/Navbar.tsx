@@ -90,13 +90,13 @@ export default function RoyalNavbar() {
           {user && <Link href="/account" onClick={()=>setOpen(false)}>My Account</Link>}
 
           <div className="flex gap-4 pt-4 text-gold">
-            <Instagram size={20}/>
-            <FaXTwitter size={18}/>
-            <Youtube size={20}/>
-            <Facebook size={20}/>
-            <FaWhatsapp size={20}/>
-            <Mail size={20}/>
-            <Phone size={20}/>
+            <a href="https://instagram.com/sandhya.foodss" target="_blank"><Instagram size={18}/></a>
+            <a href="https://x.com/SandhyaFoods" target="_blank"><FaXTwitter size={16}/></a>
+            <a href="https://www.youtube.com/@sandhyafoodss" target="_blank"><Youtube size={18}/></a>
+            <a href="https://www.facebook.com/profile.php?id=61580278672015" target="_blank"><Facebook size={18}/></a>
+            <a href="https://api.whatsapp.com/send?phone=918005511786" target="_blank"><FaWhatsapp size={18}/></a>
+            <a href="mailto:teamsandhyafoods@gmail.com"><Mail size={18}/></a>
+            <a href="tel:+918005511786"><Phone size={18}/></a>
           </div>
         </div>
       )}

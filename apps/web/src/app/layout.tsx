@@ -1,6 +1,4 @@
-export const dynamic = 'force-static'
 import type { Metadata } from "next"
-import { Geist, Geist_Mono } from "next/font/google"
 import "./globals.css"
 import ClientShell from "./ClientShell"
 import Providers from "./providers"
@@ -20,7 +18,7 @@ const body = Libre_Baskerville({
 
 export const metadata: Metadata = {
   title: "Sandhya Foods",
-  description: "RajasthaniPapad Store",
+  description: "Rajasthani Papad Store",
   icons: {
     icon: "/favicon.ico",
   },
@@ -28,8 +26,8 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
-      <body className={`${royal.variable} ${body.variable} antialiased`}>
+    <html lang="en" className="h-full">
+      <body className={`${royal.variable} ${body.variable} antialiased h-full`}>
         <Providers>
           <ClientShell>{children}</ClientShell>
         </Providers>
