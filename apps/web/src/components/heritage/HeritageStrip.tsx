@@ -1,7 +1,7 @@
 export default function HeritageStrip() {
   return (
     <section className="bg-[#F3E8CF] border-y border-sandstone">
-      <div className="max-w-7xl mx-auto px-6 py-16 grid grid-cols-2 md:grid-cols-4 gap-10 text-center">
+      <div className="max-w-7xl mx-auto px-6 py-16 grid grid-cols-2 md:grid-cols-3 gap-10 text-center">
 
         <div>
           <div className="font-royal text-3xl text-royal mb-2">1989</div>
