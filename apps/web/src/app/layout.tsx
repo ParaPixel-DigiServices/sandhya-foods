@@ -17,8 +17,32 @@ const body = Libre_Baskerville({
 })
 
 export const metadata: Metadata = {
-  title: "Sandhya Foods",
-  description: "Rajasthani Papad Store",
+  title: "Sandhya Foods - Authentic Rajasthani Papad from Jodhpur",
+  description: "A trusted family-run papad brand from Jodhpur, dedicated to crafting authentic papad with time-honored recipes and unwavering quality for Indian homes.",
+  icons: {
+    icon: "/favicon.ico",
+  },
+  openGraph: {
+    title: "Sandhya Foods - Authentic Rajasthani Papad",
+    description: "Crafting authentic Rajasthani papad with time-honored recipes since 1989",
+    url: "https://sandhyafoods.com",
+    siteName: "Sandhya Foods",
+    images: [
+      {
+        url: "/sandhyalogo.png",
+        width: 1200,
+        height: 630,
+      },
+    ],
+    locale: "en_IN",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Sandhya Foods - Authentic Rajasthani Papad",
+    description: "Crafting authentic Rajasthani papad with time-honored recipes since 1989",
+    images: ["/sandhyalogo.png"],
+  },
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
