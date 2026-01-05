@@ -4,13 +4,8 @@ export default function HeritageStrip() {
       <div className="max-w-7xl mx-auto px-6 py-16 grid grid-cols-2 md:grid-cols-4 gap-10 text-center">
 
         <div>
-          <div className="font-royal text-3xl text-royal mb-2">1952</div>
+          <div className="font-royal text-3xl text-royal mb-2">1989</div>
           <div className="text-sm uppercase tracking-widest">Legacy Since</div>
-        </div>
-
-        <div>
-          <div className="font-royal text-3xl text-royal mb-2">100%</div>
-          <div className="text-sm uppercase tracking-widest">Handcrafted</div>
         </div>
 
         <div>
