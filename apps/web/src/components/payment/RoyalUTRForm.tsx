@@ -36,7 +36,7 @@ export default function RoyalUTRForm({ order }: { order: any }) {
   return (
     <div>
       <input
-        placeholder="Enter UTR Number"
+        placeholder="Enter Transaction ID"
         value={utr}
         onChange={(e) => setUtr(e.target.value)}
         className="w-full border border-amber-300 rounded-full px-6 py-3 mb-4"
