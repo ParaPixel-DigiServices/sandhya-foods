@@ -75,7 +75,7 @@ export default function AuthPage() {
 
           <input
             type="password"
-            placeholder="Secret Passphrase"
+            placeholder="Create Password"
             className="w-full px-5 py-4 mb-8 rounded-xl border border-[#e6d7a9] bg-[#fffaf0] placeholder:text-[#bfa760]"
             onChange={e=>setPassword(e.target.value)}
           />
