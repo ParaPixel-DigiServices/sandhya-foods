@@ -1,19 +1,20 @@
 import type { Metadata } from "next"
+import Script from "next/script"
 import "./globals.css"
 import ClientShell from "./ClientShell"
 import Providers from "./providers"
 import { Cinzel, Libre_Baskerville } from "next/font/google"
 
 const royal = Cinzel({
-  weight:["400","600","700","900"],
-  subsets:["latin"],
-  variable:"--font-royal"
+  weight: ["400", "600", "700", "900"],
+  subsets: ["latin"],
+  variable: "--font-royal"
 })
 
 const body = Libre_Baskerville({
-  weight:["400","700"],
-  subsets:["latin"],
-  variable:"--font-body"
+  weight: ["400", "700"],
+  subsets: ["latin"],
+  variable: "--font-body"
 })
 
 export const metadata: Metadata = {
@@ -52,6 +53,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <Providers>
           <ClientShell>{children}</ClientShell>
         </Providers>
+        <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="afterInteractive" />
       </body>
     </html>
   )

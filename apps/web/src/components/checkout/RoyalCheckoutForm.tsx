@@ -4,9 +4,16 @@ import { useCart } from "@/store/cart"
 import { supabase } from "@/lib/supabase"
 import { useRouter } from "next/navigation"
 
+declare global {
+  interface Window {
+    Razorpay: any
+  }
+}
+
 export default function RoyalCheckoutForm() {
   const router = useRouter()
   const { items, clear } = useCart()
+  const [loading, setLoading] = useState(false)
 
   const [form, setForm] = useState({
     name: "",
@@ -21,42 +28,109 @@ export default function RoyalCheckoutForm() {
     setForm(f => ({ ...f, [k]: v }))
 
   const submit = async () => {
-    const total = items.reduce((s, i) => s + i.price * i.qty, 0)
+    if (!form.name || !form.phone || !form.address) {
+      return alert("Please fill in all required fields")
+    }
 
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return alert("Please login to continue")
+    setLoading(true)
 
-    const { data: order, error } = await supabase
-      .from("orders_v2")
-      .insert({
-        user_id: user.id,
-        customer_name: form.name,
-        phone: form.phone,
-        address: form.address,
-        city: form.city,
-        state: form.state,
-        pincode: form.pincode,
-        total,
-        status: "pending"
+    try {
+      const total = items.reduce((s, i) => s + i.price * i.qty, 0)
+
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) { setLoading(false); return alert("Please login to continue") }
+
+      // Step 1: Create order in Supabase
+      const { data: order, error } = await supabase
+        .from("orders_v2")
+        .insert({
+          user_id: user.id,
+          customer_name: form.name,
+          phone: form.phone,
+          address: form.address,
+          city: form.city,
+          state: form.state,
+          pincode: form.pincode,
+          total,
+          status: "pending"
+        })
+        .select()
+        .single()
+
+      if (error || !order) { setLoading(false); return alert("Order failed") }
+
+      // Insert order items
+      await supabase.from("order_items_v2").insert(
+        items.map(i => ({
+          order_id: order.id,
+          user_id: user.id,
+          product_id: i.id,
+          name: i.name,
+          price: i.price,
+          qty: i.qty
+        }))
+      )
+
+      // Step 2: Create Razorpay order
+      const rpRes = await fetch("/api/razorpay/create-order", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ amount: total, orderId: order.id }),
       })
-      .select()
-      .single()
 
-    if (error || !order) return alert("Order failed")
+      const rpData = await rpRes.json()
+      if (!rpRes.ok) { setLoading(false); return alert(rpData.error || "Payment init failed") }
 
-    await supabase.from("order_items_v2").insert(
-      items.map(i => ({
-        order_id: order.id,
-        user_id: user.id,
-        product_id: i.id,
-        name: i.name,
-        price: i.price,
-        qty: i.qty
-      }))
-    )
+      // Step 3: Open Razorpay Checkout
+      const options = {
+        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+        amount: rpData.amount,
+        currency: rpData.currency,
+        name: "Sandhya Foods",
+        description: "Order Payment",
+        order_id: rpData.razorpayOrderId,
+        handler: async (response: any) => {
+          // Step 4: Verify payment on server
+          const verifyRes = await fetch("/api/razorpay/verify-payment", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature,
+              supabase_order_id: order.id,
+            }),
+          })
 
-    clear()
-    router.push(`/payment/${order.id}`)
+          if (verifyRes.ok) {
+            clear()
+            router.push(`/success/${order.id}`)
+          } else {
+            alert("Payment verification failed. Please contact support.")
+          }
+        },
+        prefill: {
+          name: form.name,
+          contact: form.phone,
+        },
+        theme: {
+          color: "#7B1113",
+        },
+        modal: {
+          ondismiss: () => {
+            setLoading(false)
+            // Order stays as "pending" — user can retry from /payment/[orderId]
+          },
+        },
+      }
+
+      const rzp = new window.Razorpay(options)
+      rzp.open()
+    } catch (err) {
+      console.error("Checkout error:", err)
+      alert("Something went wrong. Please try again.")
+      setLoading(false)
+    }
   }
 
   return (
@@ -64,19 +138,20 @@ export default function RoyalCheckoutForm() {
       <h2 className="font-royal text-2xl mb-8">Delivery Address</h2>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-        <input placeholder="Full Name" className="input" onChange={e => onChange("name", e.target.value)} />
-        <input placeholder="Phone" className="input" onChange={e => onChange("phone", e.target.value)} />
+        <input placeholder="Full Name *" className="input" onChange={e => onChange("name", e.target.value)} />
+        <input placeholder="Phone *" className="input" onChange={e => onChange("phone", e.target.value)} />
         <input placeholder="City" className="input" onChange={e => onChange("city", e.target.value)} />
         <input placeholder="State" className="input" onChange={e => onChange("state", e.target.value)} />
         <input placeholder="Pincode" className="input sm:col-span-2" onChange={e => onChange("pincode", e.target.value)} />
-        <textarea placeholder="Full Address" className="input sm:col-span-2 h-28" onChange={e => onChange("address", e.target.value)} />
+        <textarea placeholder="Full Address *" className="input sm:col-span-2 h-28" onChange={e => onChange("address", e.target.value)} />
       </div>
 
       <button
         onClick={submit}
-        className="mt-10 w-full py-4 rounded-full bg-[radial-gradient(circle_at_top,#FFE39B,#D4AF37)] uppercase tracking-widest text-xs font-semibold"
+        disabled={loading}
+        className="mt-10 w-full py-4 rounded-full bg-[radial-gradient(circle_at_top,#FFE39B,#D4AF37)] uppercase tracking-widest text-xs font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
       >
-        Continue to Payment
+        {loading ? "Processing..." : "Pay Now"}
       </button>
     </div>
   )
