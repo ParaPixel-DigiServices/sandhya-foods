@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import crypto from "crypto"
 import { createClient } from "@supabase/supabase-js"
+import { sendWhatsAppTemplateMessage } from "@/lib/whatsapp"
 
 export const dynamic = "force-dynamic"
 
@@ -53,7 +54,7 @@ export async function POST(req: NextRequest) {
     // Insert payment record
     const { data: order } = await supabaseAdmin
       .from("orders_v2")
-      .select("user_id, total")
+      .select("user_id, total, phone, customer_name")
       .eq("id", supabase_order_id)
       .single()
 
@@ -64,6 +65,31 @@ export async function POST(req: NextRequest) {
         razorpay_payment_id,
         status: "verified",
       })
+
+      // Send WhatsApp to Customer
+      if (order.phone) {
+        await sendWhatsAppTemplateMessage(
+          order.phone,
+          "order_confirmation", // Template name configured in Meta
+          [
+            { type: "text", text: order.customer_name || "Customer" },
+            { type: "text", text: supabase_order_id.split("-")[0] }, // Short order ID
+          ]
+        ).catch(err => console.error("Customer WA error:", err))
+      }
+
+      // Send WhatsApp to Admin
+      const adminPhone = process.env.WHATSAPP_ADMIN_PHONE
+      if (adminPhone) {
+        await sendWhatsAppTemplateMessage(
+          adminPhone,
+          "admin_new_order", // Template name configured in Meta
+          [
+            { type: "text", text: supabase_order_id.split("-")[0] }, // Short order ID
+            { type: "text", text: String(order.total) },
+          ]
+        ).catch(err => console.error("Admin WA error:", err))
+      }
     }
 
     return NextResponse.json({ success: true })
