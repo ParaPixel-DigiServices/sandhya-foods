@@ -42,9 +42,8 @@ export default function AdminLoginPage() {
       return
     }
 
-    // 3. All good — redirect to admin dashboard
-    router.push("/admin")
-    router.refresh()
+    // 3. All good — redirect to admin dashboard (hard navigation to avoid layout state conflict)
+    window.location.href = "/admin"
   }
 
   return (
