@@ -1,20 +1,31 @@
 /**
  * WhatsApp Cloud API Integration
  * Requires:
- * WHATSAPP_API_TOKEN
- * WHATSAPP_PHONE_NUMBER_ID
- * WHATSAPP_ADMIN_PHONE (optional, for admin notifications)
+ *   WHATSAPP_API_TOKEN          — Permanent token from Meta Business Manager
+ *   WHATSAPP_PHONE_NUMBER_ID    — Phone Number ID from WhatsApp > API Setup
+ *   WHATSAPP_ADMIN_PHONE        — Admin's number to receive order alerts (e.g. 919876543210)
  */
 
-interface WhatsAppTemplateParam {
-  type: "text" | "currency" | "date_time" | "document" | "image" | "video";
-  text?: string;
-  currency?: {
-    fallback_value: string;
-    code: string;
-    amount_1000: number;
-  };
-  // Add other types as needed
+// ─── Types ────────────────────────────────────────────────────────────────────
+
+interface TextParam {
+  type: "text";
+  text: string;
+}
+
+/** Used for dynamic URL buttons: the value replaces {{1}} in the template URL */
+interface ButtonParam {
+  type: "text";
+  text: string; // the dynamic URL suffix
+}
+
+interface TemplateComponent {
+  type: "body" | "header" | "button";
+  /** Required for button components */
+  sub_type?: "url";
+  /** Required for button components — index of the button (0-based) */
+  index?: number;
+  parameters: TextParam[] | ButtonParam[];
 }
 
 interface WhatsAppMessagePayload {
@@ -23,60 +34,37 @@ interface WhatsAppMessagePayload {
   type: "template";
   template: {
     name: string;
-    language: {
-      code: string;
-    };
-    components?: {
-      type: "body" | "header" | "button";
-      parameters: WhatsAppTemplateParam[];
-    }[];
+    language: { code: string };
+    components: TemplateComponent[];
   };
 }
 
-export async function sendWhatsAppTemplateMessage(
-  toPhone: string,
-  templateName: string,
-  bodyParams: WhatsAppTemplateParam[] = [],
-  languageCode: string = "en"
-) {
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+/**
+ * Normalise a phone number to E.164 for India.
+ * Accepts 10-digit local numbers or numbers already prefixed with 91/+91.
+ */
+function normaliseIndianPhone(raw: string): string {
+  const digits = raw.replace(/\D/g, "");
+  if (digits.length === 10) return `91${digits}`;
+  return digits; // already has country code
+}
+
+// ─── Core send function ───────────────────────────────────────────────────────
+
+async function sendMessage(payload: WhatsAppMessagePayload): Promise<boolean> {
   const token = process.env.WHATSAPP_API_TOKEN;
   const phoneNumberId = process.env.WHATSAPP_PHONE_NUMBER_ID;
 
   if (!token || !phoneNumberId) {
-    console.warn("WhatsApp API credentials missing. Skipping message send.");
+    console.warn("[WhatsApp] Credentials missing — skipping send.");
     return false;
   }
 
-  // Format phone number: remove any non-digit characters.
-  // If it's a 10-digit Indian number, prepend 91.
-  let formattedPhone = toPhone.replace(/\D/g, "");
-  if (formattedPhone.length === 10) {
-    formattedPhone = `91${formattedPhone}`;
-  }
-
-  const payload: WhatsAppMessagePayload = {
-    messaging_product: "whatsapp",
-    to: formattedPhone,
-    type: "template",
-    template: {
-      name: templateName,
-      language: {
-        code: languageCode,
-      },
-      ...(bodyParams.length > 0 && {
-        components: [
-          {
-            type: "body",
-            parameters: bodyParams,
-          },
-        ],
-      }),
-    },
-  };
-
   try {
-    const response = await fetch(
-      `https://graph.facebook.com/v18.0/${phoneNumberId}/messages`,
+    const res = await fetch(
+      `https://graph.facebook.com/v19.0/${phoneNumberId}/messages`,
       {
         method: "POST",
         headers: {
@@ -87,16 +75,121 @@ export async function sendWhatsAppTemplateMessage(
       }
     );
 
-    const data = await response.json();
+    const data = await res.json();
 
-    if (!response.ok) {
-      console.error("WhatsApp API Error:", data);
+    if (!res.ok) {
+      console.error("[WhatsApp] API error:", JSON.stringify(data));
       return false;
     }
 
     return true;
-  } catch (error) {
-    console.error("Failed to send WhatsApp message:", error);
+  } catch (err) {
+    console.error("[WhatsApp] Fetch failed:", err);
     return false;
   }
+}
+
+// ─── Public helpers ───────────────────────────────────────────────────────────
+
+/**
+ * Send the `order_confirmation` template to a customer.
+ *
+ * Template body variables:
+ *   {{1}} Customer name
+ *   {{2}} Order ID
+ *   {{3}} Items summary  (e.g. "2x Masala Papad, 1x Pickle 500g")
+ *   {{4}} Delivery address
+ *
+ * Template button (dynamic URL, index 0):
+ *   https://sandhyafoods.com/orders/{{1}}  →  suffix = orderId
+ */
+export async function sendOrderConfirmationToCustomer(opts: {
+  phone: string;
+  customerName: string;
+  orderId: string;
+  itemsSummary: string;
+  deliveryAddress: string;
+}): Promise<boolean> {
+  const payload: WhatsAppMessagePayload = {
+    messaging_product: "whatsapp",
+    to: normaliseIndianPhone(opts.phone),
+    type: "template",
+    template: {
+      name: "order_confirmation",
+      language: { code: "en" },
+      components: [
+        {
+          type: "body",
+          parameters: [
+            { type: "text", text: opts.customerName },
+            { type: "text", text: opts.orderId },
+            { type: "text", text: opts.itemsSummary },
+            { type: "text", text: opts.deliveryAddress },
+          ],
+        },
+        {
+          // Dynamic URL button — the {{1}} in the URL becomes the orderId
+          type: "button",
+          sub_type: "url",
+          index: 0,
+          parameters: [{ type: "text", text: opts.orderId }],
+        },
+      ],
+    },
+  };
+
+  return sendMessage(payload);
+}
+
+/**
+ * Send the `admin_new_order` template to the site owner.
+ *
+ * Template body variables:
+ *   {{1}} Order ID
+ *   {{2}} Total value (₹)
+ *   {{3}} Items summary
+ *   {{4}} Customer name + phone
+ *   {{5}} Delivery address
+ *   {{6}} Date & time placed
+ *
+ * Template button is static (no dynamic params needed).
+ */
+export async function sendNewOrderAlertToAdmin(opts: {
+  orderId: string;
+  total: number;
+  itemsSummary: string;
+  customerLabel: string; // e.g. "Rahul — 9876543210"
+  deliveryAddress: string;
+  placedAt: string; // e.g. "28 Apr 2026, 3:15 PM IST"
+}): Promise<boolean> {
+  const adminPhone = process.env.WHATSAPP_ADMIN_PHONE;
+  if (!adminPhone) {
+    console.warn("[WhatsApp] WHATSAPP_ADMIN_PHONE not set — skipping admin alert.");
+    return false;
+  }
+
+  const payload: WhatsAppMessagePayload = {
+    messaging_product: "whatsapp",
+    to: normaliseIndianPhone(adminPhone),
+    type: "template",
+    template: {
+      name: "admin_new_order",
+      language: { code: "en" },
+      components: [
+        {
+          type: "body",
+          parameters: [
+            { type: "text", text: opts.orderId },
+            { type: "text", text: String(opts.total) },
+            { type: "text", text: opts.itemsSummary },
+            { type: "text", text: opts.customerLabel },
+            { type: "text", text: opts.deliveryAddress },
+            { type: "text", text: opts.placedAt },
+          ],
+        },
+      ],
+    },
+  };
+
+  return sendMessage(payload);
 }

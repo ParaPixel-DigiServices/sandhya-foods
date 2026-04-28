@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from "next/server"
 import crypto from "crypto"
 import { createClient } from "@supabase/supabase-js"
-import { sendWhatsAppTemplateMessage } from "@/lib/whatsapp"
+import {
+  sendOrderConfirmationToCustomer,
+  sendNewOrderAlertToAdmin,
+} from "@/lib/whatsapp"
 
 export const dynamic = "force-dynamic"
 
@@ -51,14 +54,21 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // Insert payment record
-    const { data: order } = await supabaseAdmin
-      .from("orders_v2")
-      .select("user_id, total, phone, customer_name")
-      .eq("id", supabase_order_id)
-      .single()
+    // Fetch full order details needed for WhatsApp messages
+    const [{ data: order }, { data: orderItems }] = await Promise.all([
+      supabaseAdmin
+        .from("orders_v2")
+        .select("user_id, total, phone, customer_name, address, city, state, pincode, created_at")
+        .eq("id", supabase_order_id)
+        .single(),
+      supabaseAdmin
+        .from("order_items_v2")
+        .select("name, qty, price")
+        .eq("order_id", supabase_order_id),
+    ])
 
     if (order) {
+      // Insert payment record
       await supabaseAdmin.from("payments_v2").insert({
         order_id: supabase_order_id,
         user_id: order.user_id,
@@ -66,30 +76,60 @@ export async function POST(req: NextRequest) {
         status: "verified",
       })
 
-      // Send WhatsApp to Customer
+      // ── Build shared message data ──────────────────────────────────────────
+
+      // Items summary: "2x Masala Papad, 1x Mango Pickle (500g)"
+      const itemsSummary =
+        orderItems && orderItems.length > 0
+          ? orderItems
+              .map((item: { name: string; qty: number; price: number }) => `${item.qty}x ${item.name}`)
+              .join(", ")
+          : "Items not available"
+
+      // Full delivery address on one line
+      const deliveryAddress = [
+        order.address,
+        order.city,
+        order.state,
+        order.pincode,
+      ]
+        .filter(Boolean)
+        .join(", ")
+
+      // Format date/time in IST
+      const placedAt = new Date(order.created_at).toLocaleString("en-IN", {
+        timeZone: "Asia/Kolkata",
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: true,
+      }) + " IST"
+
+      // Short order ID (first segment of the UUID is enough for display)
+      const shortOrderId = supabase_order_id.split("-")[0].toUpperCase()
+
+      // ── Send WhatsApp to Customer ──────────────────────────────────────────
       if (order.phone) {
-        await sendWhatsAppTemplateMessage(
-          order.phone,
-          "order_confirmation", // Template name configured in Meta
-          [
-            { type: "text", text: order.customer_name || "Customer" },
-            { type: "text", text: supabase_order_id.split("-")[0] }, // Short order ID
-          ]
-        ).catch(err => console.error("Customer WA error:", err))
+        sendOrderConfirmationToCustomer({
+          phone: order.phone,
+          customerName: order.customer_name || "Customer",
+          orderId: supabase_order_id, // full UUID used in the URL button
+          itemsSummary,
+          deliveryAddress,
+        }).catch((err) => console.error("[WhatsApp] Customer message error:", err))
       }
 
-      // Send WhatsApp to Admin
-      const adminPhone = process.env.WHATSAPP_ADMIN_PHONE
-      if (adminPhone) {
-        await sendWhatsAppTemplateMessage(
-          adminPhone,
-          "admin_new_order", // Template name configured in Meta
-          [
-            { type: "text", text: supabase_order_id.split("-")[0] }, // Short order ID
-            { type: "text", text: String(order.total) },
-          ]
-        ).catch(err => console.error("Admin WA error:", err))
-      }
+      // ── Send WhatsApp to Admin ─────────────────────────────────────────────
+      sendNewOrderAlertToAdmin({
+        orderId: shortOrderId,
+        total: order.total,
+        itemsSummary,
+        customerLabel: `${order.customer_name || "Unknown"} — ${order.phone || "No phone"}`,
+        deliveryAddress,
+        placedAt,
+      }).catch((err) => console.error("[WhatsApp] Admin message error:", err))
     }
 
     return NextResponse.json({ success: true })
