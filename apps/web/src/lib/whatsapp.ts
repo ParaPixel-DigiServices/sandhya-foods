@@ -100,8 +100,7 @@ async function sendMessage(payload: WhatsAppMessagePayload): Promise<boolean> {
  *   {{3}} Items summary  (e.g. "2x Masala Papad, 1x Pickle 500g")
  *   {{4}} Delivery address
  *
- * Template button (dynamic URL, index 0):
- *   https://sandhyafoods.com/orders/{{1}}  →  suffix = orderId
+ * Template button is static (no dynamic params needed).
  */
 export async function sendOrderConfirmationToCustomer(opts: {
   phone: string;
@@ -126,14 +125,7 @@ export async function sendOrderConfirmationToCustomer(opts: {
             { type: "text", text: opts.itemsSummary },
             { type: "text", text: opts.deliveryAddress },
           ],
-        },
-        {
-          // Dynamic URL button — the {{1}} in the URL becomes the orderId
-          type: "button",
-          sub_type: "url",
-          index: 0,
-          parameters: [{ type: "text", text: opts.orderId }],
-        },
+        }
       ],
     },
   };
