@@ -13,21 +13,31 @@ export default function AuthPage() {
   const [password,setPassword] = useState("")
 
   async function submit() {
-    if(mode==="signup") {
-      const { data } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            full_name: name,
-            phone
+    try {
+      const cleanEmail = email.trim()
+      const cleanPassword = password.trim()
+      
+      if(mode==="signup") {
+        const { data, error } = await supabase.auth.signUp({
+          email: cleanEmail,
+          password: cleanPassword,
+          options: {
+            data: {
+              full_name: name,
+              phone
+            }
           }
-        }
-      })
-      if(data.user) window.location.href = "/verify-phone"
-    } else {
-      await supabase.auth.signInWithPassword({ email, password })
-      window.location.href = "/"
+        })
+        if(error) throw error;
+        if(data.user) window.location.href = "/"
+      } else {
+        const { error } = await supabase.auth.signInWithPassword({ email: cleanEmail, password: cleanPassword })
+        if(error) throw error;
+        window.location.href = "/"
+      }
+    } catch (err: any) {
+      console.error(err);
+      alert(err.message || "An error occurred");
     }
   }
 

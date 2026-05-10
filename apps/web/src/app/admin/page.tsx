@@ -26,7 +26,7 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     supabase
-      .from("orders_v2")
+      .from("orders")
       .select("total,created_at")
       .then(({ data }) => {
         if (!data) return;
@@ -49,7 +49,7 @@ export default function AdminDashboard() {
       .then(({ data }) => setCustomers(data?.length || 0));
 
     supabase
-      .from("orders_v2")
+      .from("orders")
       .select("status")
       .then(({ data }) => {
         if (!data) return;
@@ -61,7 +61,7 @@ export default function AdminDashboard() {
       });
 
     supabase
-      .from("order_items_v2")
+      .from("order_items")
       .select("name,qty")
       .then(({ data }) => {
         if (!data) return;

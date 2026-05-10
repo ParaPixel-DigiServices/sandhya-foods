@@ -38,7 +38,7 @@ export async function POST(req: NextRequest) {
 
     // Update the order in Supabase
     const { error: orderError } = await supabaseAdmin
-      .from("orders_v2")
+      .from("orders")
       .update({
         status: "paid",
         razorpay_payment_id,
@@ -57,19 +57,19 @@ export async function POST(req: NextRequest) {
     // Fetch full order details needed for WhatsApp messages
     const [{ data: order }, { data: orderItems }] = await Promise.all([
       supabaseAdmin
-        .from("orders_v2")
+        .from("orders")
         .select("user_id, total, phone, customer_name, address, city, state, pincode, created_at")
         .eq("id", supabase_order_id)
         .single(),
       supabaseAdmin
-        .from("order_items_v2")
+        .from("order_items")
         .select("name, qty, price")
         .eq("order_id", supabase_order_id),
     ])
 
     if (order) {
       // Insert payment record
-      await supabaseAdmin.from("payments_v2").insert({
+      await supabaseAdmin.from("payments").insert({
         order_id: supabase_order_id,
         user_id: order.user_id,
         razorpay_payment_id,

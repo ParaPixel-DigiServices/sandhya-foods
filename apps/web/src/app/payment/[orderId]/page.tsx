@@ -19,7 +19,7 @@ export default function PaymentPage() {
     queryKey: ["order", orderId],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("orders_v2")
+        .from("orders")
         .select("*")
         .eq("id", orderId)
         .single()

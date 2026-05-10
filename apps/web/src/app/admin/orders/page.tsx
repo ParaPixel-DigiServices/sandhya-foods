@@ -10,7 +10,7 @@ export default function AdminOrders() {
 
   async function load() {
     const { data: orders } = await supabase
-      .from("orders_v2")
+      .from("orders")
       .select("*")
       .order("created_at", { ascending: false })
 
@@ -21,12 +21,12 @@ export default function AdminOrders() {
   useEffect(() => { load() }, [])
 
   async function updateStatus(id: string, status: string) {
-    await supabase.from("orders_v2").update({ status }).eq("id", id)
+    await supabase.from("orders").update({ status }).eq("id", id)
     load()
   }
 
   async function saveNote() {
-    await supabase.from("orders_v2").update({ admin_note: note }).eq("id", view.id)
+    await supabase.from("orders").update({ admin_note: note }).eq("id", view.id)
     setView(null)
     setNote("")
     load()
@@ -61,7 +61,7 @@ export default function AdminOrders() {
               )}
               <button onClick={async () => {
                 const { data: items } = await supabase
-                  .from("order_items_v2")
+                  .from("order_items")
                   .select("name,qty,price")
                   .eq("order_id", o.id)
                 setView({ ...o, items })

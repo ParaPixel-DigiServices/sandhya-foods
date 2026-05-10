@@ -42,7 +42,7 @@ export default function RoyalCheckoutForm() {
 
       // Step 1: Create order in Supabase
       const { data: order, error } = await supabase
-        .from("orders_v2")
+        .from("orders")
         .insert({
           user_id: user.id,
           customer_name: form.name,
@@ -60,7 +60,7 @@ export default function RoyalCheckoutForm() {
       if (error || !order) { setLoading(false); return alert("Order failed") }
 
       // Insert order items
-      await supabase.from("order_items_v2").insert(
+      await supabase.from("order_items").insert(
         items.map(i => ({
           order_id: order.id,
           user_id: user.id,
