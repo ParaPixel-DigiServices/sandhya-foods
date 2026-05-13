@@ -51,6 +51,17 @@ function normaliseIndianPhone(raw: string): string {
   return digits; // already has country code
 }
 
+/**
+ * WhatsApp template params must NOT contain newlines, tabs, or 4+ consecutive spaces.
+ * This strips all of those characters before sending.
+ */
+function sanitize(text: string): string {
+  return text
+    .replace(/[\r\n\t]+/g, " ")  // replace newlines/tabs with a space
+    .replace(/ {4,}/g, "   ")    // collapse 4+ spaces down to 3
+    .trim();
+}
+
 // ─── Core send function ───────────────────────────────────────────────────────
 
 async function sendMessage(payload: WhatsAppMessagePayload): Promise<boolean> {
@@ -120,10 +131,10 @@ export async function sendOrderConfirmationToCustomer(opts: {
         {
           type: "body",
           parameters: [
-            { type: "text", text: opts.customerName },
-            { type: "text", text: opts.orderId },
-            { type: "text", text: opts.itemsSummary },
-            { type: "text", text: opts.deliveryAddress },
+            { type: "text", text: sanitize(opts.customerName) },
+            { type: "text", text: sanitize(opts.orderId) },
+            { type: "text", text: sanitize(opts.itemsSummary) },
+            { type: "text", text: sanitize(opts.deliveryAddress) },
           ],
         }
       ],
@@ -171,12 +182,12 @@ export async function sendNewOrderAlertToAdmin(opts: {
         {
           type: "body",
           parameters: [
-            { type: "text", text: opts.orderId },
-            { type: "text", text: String(opts.total) },
-            { type: "text", text: opts.itemsSummary },
-            { type: "text", text: opts.customerLabel },
-            { type: "text", text: opts.deliveryAddress },
-            { type: "text", text: opts.placedAt },
+            { type: "text", text: sanitize(opts.orderId) },
+            { type: "text", text: sanitize(String(opts.total)) },
+            { type: "text", text: sanitize(opts.itemsSummary) },
+            { type: "text", text: sanitize(opts.customerLabel) },
+            { type: "text", text: sanitize(opts.deliveryAddress) },
+            { type: "text", text: sanitize(opts.placedAt) },
           ],
         },
       ],

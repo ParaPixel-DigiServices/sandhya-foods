@@ -29,7 +29,12 @@ export const useCart = create<CartState>()(
         return { items:[...state.items,item] }
       }),
       remove:id=>set(state=>({ items: state.items.filter(i=>i.id!==id) })),
-      change:(id,qty)=>set(state=>({ items: state.items.map(i=>i.id===id?{...i,qty}:i) })),
+      change: (id, qty) => set(state => {
+        if (qty <= 0) {
+          return { items: state.items.filter(i => i.id !== id) }
+        }
+        return { items: state.items.map(i => i.id === id ? { ...i, qty } : i) }
+      }),
       clear:()=>set({ items:[] })
     }),
     { name:"royal-cart" }

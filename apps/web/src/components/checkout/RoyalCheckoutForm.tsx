@@ -71,6 +71,7 @@ export default function RoyalCheckoutForm() {
         }))
       )
 
+
       // Step 2: Create Razorpay order
       const rpRes = await fetch("/api/razorpay/create-order", {
         method: "POST",

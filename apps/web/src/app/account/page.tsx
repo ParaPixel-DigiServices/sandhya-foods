@@ -1,11 +1,11 @@
 "use client";
-export const dynamic = 'force-static'
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 
 export default function AccountPage() {
   const [profile, setProfile] = useState<any>(null);
   const [orders, setOrders] = useState<any[]>([]);
+  const [loadingOrders, setLoadingOrders] = useState(true);
 
   useEffect(() => {
     supabase.auth.getUser().then(async ({ data }) => {
@@ -20,8 +20,28 @@ export default function AccountPage() {
 
       setProfile(profileRow);
 
-      const { data: orders } = await supabase.rpc("get_my_orders", { uid });
-      setOrders(orders || []);
+      const { data: rawOrders } = await supabase
+        .from("orders")
+        .select("id, status, total, created_at, admin_note")
+        .eq("user_id", uid)
+        .order("created_at", { ascending: false });
+
+      if (rawOrders && rawOrders.length > 0) {
+        const orderIds = rawOrders.map((o: any) => o.id);
+        const { data: allItems } = await supabase
+          .from("order_items")
+          .select("order_id, name, qty, price")
+          .in("order_id", orderIds);
+
+        const merged = rawOrders.map((o: any) => ({
+          ...o,
+          items: (allItems || []).filter((i: any) => i.order_id === o.id),
+        }));
+        setOrders(merged);
+      } else {
+        setOrders([]);
+      }
+      setLoadingOrders(false);
     });
   }, []);
 
@@ -92,6 +112,11 @@ export default function AccountPage() {
         <div className="bg-white rounded-[3.5rem] p-12 shadow-2xl">
           <h2 className="font-royal text-3xl text-royal mb-8">My Orders</h2>
 
+          {loadingOrders ? (
+            <p className="text-center opacity-50">Loading orders...</p>
+          ) : orders.length === 0 ? (
+            <p className="text-center opacity-50">No orders yet.</p>
+          ) : (
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
             {orders.map((o) => (
               <div
@@ -147,6 +172,7 @@ export default function AccountPage() {
               </div>
             ))}
           </div>
+          )}
         </div>
       </div>
     </section>

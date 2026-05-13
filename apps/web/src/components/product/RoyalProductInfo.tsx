@@ -1,7 +1,24 @@
 import { useCart } from "@/store/cart";
+import { supabase } from "@/lib/supabase";
 
 export default function RoyalProductInfo({ product }: { product: any }) {
   const add = useCart((s) => s.add);
+
+  async function handleAddToCart() {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      window.location.href = "/auth";
+      return;
+    }
+    add({
+      id: product.id,
+      name: product.name,
+      price: product.price,
+      image: product.product_images?.find((i: any) => i.is_primary)?.url,
+      qty: 1,
+    });
+  }
+
   return (
     <div className="space-y-12">
       <div className="flex items-center gap-6">
@@ -34,15 +51,7 @@ export default function RoyalProductInfo({ product }: { product: any }) {
       </div>
 
       <button
-        onClick={() =>
-          add({
-            id: product.id,
-            name: product.name,
-            price: product.price,
-            image: product.product_images?.find((i) => i.is_primary)?.url,
-            qty: 1,
-          })
-        }
+        onClick={handleAddToCart}
         className="
         block
         px-16 py-4
