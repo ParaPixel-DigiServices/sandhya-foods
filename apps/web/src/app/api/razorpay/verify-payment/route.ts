@@ -111,25 +111,39 @@ export async function POST(req: NextRequest) {
       const shortOrderId = supabase_order_id.split("-")[0].toUpperCase()
 
       // ── Send WhatsApp to Customer ──────────────────────────────────────────
+      let customerResult = false;
       if (order.phone) {
-        sendOrderConfirmationToCustomer({
-          phone: order.phone,
-          customerName: order.customer_name || "Customer",
-          orderId: supabase_order_id, // full UUID used in the URL button
-          itemsSummary,
-          deliveryAddress,
-        }).catch((err) => console.error("[WhatsApp] Customer message error:", err))
+        try {
+          customerResult = await sendOrderConfirmationToCustomer({
+            phone: order.phone,
+            customerName: order.customer_name || "Customer",
+            orderId: supabase_order_id,
+            itemsSummary,
+            deliveryAddress,
+          });
+          console.log("[verify-payment] Customer WhatsApp result:", customerResult);
+        } catch (err) {
+          console.error("[verify-payment] Customer WhatsApp threw:", err);
+        }
+      } else {
+        console.warn("[verify-payment] No phone on order — skipping customer WhatsApp.");
       }
 
       // ── Send WhatsApp to Admin ─────────────────────────────────────────────
-      sendNewOrderAlertToAdmin({
-        orderId: shortOrderId,
-        total: order.total,
-        itemsSummary,
-        customerLabel: `${order.customer_name || "Unknown"} — ${order.phone || "No phone"}`,
-        deliveryAddress,
-        placedAt,
-      }).catch((err) => console.error("[WhatsApp] Admin message error:", err))
+      let adminResult = false;
+      try {
+        adminResult = await sendNewOrderAlertToAdmin({
+          orderId: shortOrderId,
+          total: order.total,
+          itemsSummary,
+          customerLabel: `${order.customer_name || "Unknown"} — ${order.phone || "No phone"}`,
+          deliveryAddress,
+          placedAt,
+        });
+        console.log("[verify-payment] Admin WhatsApp result:", adminResult);
+      } catch (err) {
+        console.error("[verify-payment] Admin WhatsApp threw:", err);
+      }
     }
 
     return NextResponse.json({ success: true })

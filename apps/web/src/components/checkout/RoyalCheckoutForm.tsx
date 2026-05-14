@@ -71,6 +71,27 @@ export default function RoyalCheckoutForm() {
         }))
       )
 
+      // ── BYPASS MODE ─────────────────────────────────────────────────────────
+      // Set NEXT_PUBLIC_BYPASS_PAYMENT=true in .env (or Vercel env vars) to skip Razorpay.
+      // All users will have orders confirmed instantly without any payment.
+      // Set to false or remove before final go-live.
+      if (process.env.NEXT_PUBLIC_BYPASS_PAYMENT === "true") {
+        const bypassRes = await fetch("/api/razorpay/bypass-payment", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ supabase_order_id: order.id }),
+        })
+        if (bypassRes.ok) {
+          clear()
+          router.push(`/success/${order.id}`)
+        } else {
+          const d = await bypassRes.json()
+          alert(d.error || "Bypass payment failed")
+          setLoading(false)
+        }
+        return
+      }
+      // ────────────────────────────────────────────────────────────────────────
 
       // Step 2: Create Razorpay order
       const rpRes = await fetch("/api/razorpay/create-order", {

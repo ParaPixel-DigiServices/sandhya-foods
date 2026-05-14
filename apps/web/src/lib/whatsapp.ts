@@ -68,34 +68,53 @@ async function sendMessage(payload: WhatsAppMessagePayload): Promise<boolean> {
   const token = process.env.WHATSAPP_API_TOKEN;
   const phoneNumberId = process.env.WHATSAPP_PHONE_NUMBER_ID;
 
+  console.log("[WhatsApp] sendMessage called →", {
+    to: payload.template?.name,
+    recipient: (payload as any).to,
+    hasToken: !!token,
+    tokenPrefix: token ? token.slice(0, 12) + "..." : "MISSING",
+    hasPhoneNumberId: !!phoneNumberId,
+    phoneNumberId: phoneNumberId || "MISSING",
+  });
+
   if (!token || !phoneNumberId) {
-    console.warn("[WhatsApp] Credentials missing — skipping send.");
+    console.error("[WhatsApp] ❌ Credentials missing — WHATSAPP_API_TOKEN or WHATSAPP_PHONE_NUMBER_ID not set in env.");
     return false;
   }
 
+  const url = `https://graph.facebook.com/v19.0/${phoneNumberId}/messages`;
+  const body = JSON.stringify(payload);
+
+  console.log("[WhatsApp] Sending to Meta API →", url);
+  console.log("[WhatsApp] Payload →", body);
+
   try {
-    const res = await fetch(
-      `https://graph.facebook.com/v19.0/${phoneNumberId}/messages`,
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
-      }
-    );
+    const res = await fetch(url, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body,
+    });
 
     const data = await res.json();
 
+    console.log("[WhatsApp] Meta API responded →", {
+      status: res.status,
+      ok: res.ok,
+      body: JSON.stringify(data),
+    });
+
     if (!res.ok) {
-      console.error("[WhatsApp] API error:", JSON.stringify(data));
+      console.error("[WhatsApp] ❌ API error:", JSON.stringify(data, null, 2));
       return false;
     }
 
+    console.log("[WhatsApp] ✅ Message sent successfully →", JSON.stringify(data));
     return true;
   } catch (err) {
-    console.error("[WhatsApp] Fetch failed:", err);
+    console.error("[WhatsApp] ❌ Network/fetch error:", err);
     return false;
   }
 }

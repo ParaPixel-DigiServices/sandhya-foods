@@ -6,7 +6,7 @@
 
 const API_TOKEN = process.env.WHATSAPP_API_TOKEN;
 const PHONE_NUMBER_ID = process.env.WHATSAPP_PHONE_NUMBER_ID;
-const TEST_PHONE = "919162392229"; // +919959651100
+const TEST_PHONE = "919959651100"; // +919959651100
 
 // ─── Core send ───────────────────────────────────────────────────────────────
 
